@@ -1,17 +1,13 @@
 package org.example.framgiabookingtours.entity;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
+import lombok.*;
 import java.time.Instant;
 import java.util.List;
 
 @Entity
 @Table(name = "categories")
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class Category {
@@ -23,8 +19,7 @@ public class Category {
     @Column(name = "name", nullable = false, length = 100)
     private String name;
 
-    @Lob
-    @Column(name = "description")
+    @Column(name = "description", columnDefinition = "text")
     private String description;
 
     @Column(name = "created_at", updatable = false)

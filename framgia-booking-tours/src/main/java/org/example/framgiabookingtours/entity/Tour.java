@@ -2,19 +2,11 @@ package org.example.framgiabookingtours.entity;
 
 import org.example.framgiabookingtours.enums.TourStatus;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "tours")
@@ -39,8 +31,7 @@ public class Tour {
     @Column(name = "name", nullable = false, length = 150)
     private String name;
 
-    @Lob // Kiểu TEXT
-    @Column(name = "description")
+    @Column(name = "description", columnDefinition = "text")
     private String description;
 
     @Column(name = "location", length = 150)
@@ -52,13 +43,14 @@ public class Tour {
     @Column(name = "duration_days")
     private Integer durationDays;
 
+    @Builder.Default
     @Column(name = "available_slots")
     private Integer availableSlots = 0;
 
-    @Lob
-    @Column(name = "image_url")
+    @Column(name = "image_url", columnDefinition = "text")
     private String imageUrl;
 
+    @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(name = "status", columnDefinition = "ENUM('AVAILABLE', 'UNAVAILABLE') DEFAULT 'AVAILABLE'")
     private TourStatus status = TourStatus.AVAILABLE;
