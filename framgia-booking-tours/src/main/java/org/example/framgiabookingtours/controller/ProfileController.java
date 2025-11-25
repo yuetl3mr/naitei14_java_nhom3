@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import java.util.UUID;
 
 import org.example.framgiabookingtours.dto.ApiResponse;
+import org.example.framgiabookingtours.dto.request.ProfileBankUpdateRequestDTO;
 import org.example.framgiabookingtours.dto.request.ProfileUpdateRequestDTO;
 import org.example.framgiabookingtours.dto.response.ProfileResponseDTO;
 import org.example.framgiabookingtours.exception.AppException;
@@ -68,4 +69,19 @@ public class ProfileController {
 			throw new AppException(ErrorCode.UPLOAD_FAILED);
 		}
 	}
+
+	@PutMapping("/banking")
+	public ApiResponse<ProfileResponseDTO> updateBankingInfo(
+			@RequestBody @Valid ProfileBankUpdateRequestDTO bankRequest,
+			@RequestHeader(value = "X-User-Email", defaultValue = "test@gmail.com") String userEmail) {
+		ProfileUpdateRequestDTO fullRequest = new ProfileUpdateRequestDTO();
+
+		fullRequest.setBankName(bankRequest.getBankName());
+		fullRequest.setBankAccountNumber(bankRequest.getBankAccountNumber());
+
+		ProfileResponseDTO result = profileService.updateProfile(fullRequest, userEmail);
+
+		return ApiResponse.<ProfileResponseDTO>builder().result(result).message("Update banking info success").build();
+	}
+
 }
