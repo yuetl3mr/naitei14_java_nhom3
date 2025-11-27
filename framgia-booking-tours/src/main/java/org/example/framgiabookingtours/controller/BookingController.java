@@ -1,12 +1,16 @@
 package org.example.framgiabookingtours.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.example.framgiabookingtours.dto.ApiResponse;
 import org.example.framgiabookingtours.dto.request.BookingRequestDTO;
 import org.example.framgiabookingtours.dto.response.BookingResponseDTO;
+import org.example.framgiabookingtours.dto.response.PaymentResponseDTO;
 import org.example.framgiabookingtours.entity.Booking;
 import org.example.framgiabookingtours.service.BookingService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.example.framgiabookingtours.service.PaymentService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -19,6 +23,7 @@ import java.util.List;
 public class BookingController {
 
     private final BookingService bookingService;
+    private final PaymentService paymentService;
 
 
     @GetMapping("/my-bookings")
@@ -34,17 +39,26 @@ public class BookingController {
     }
 
     @PostMapping
-    public ApiResponse<Booking> createBooking(
-            @Valid @RequestBody BookingRequestDTO request
-    ) {
+    public ApiResponse<BookingResponseDTO> createBooking(
+            @Valid @RequestBody BookingRequestDTO request) {
         String userEmail = getCurrentUserEmail();
-        Booking booking = bookingService.createBooking(request, userEmail);
+        BookingResponseDTO response = bookingService.createBooking(request, userEmail);
 
-        return ApiResponse.<Booking>builder()
+        return ApiResponse.<BookingResponseDTO>builder()
                 .code(1000)
                 .message("Tạo booking thành công")
-                .result(booking)
+                .result(response)
                 .build();
+    }
+
+    @PostMapping("/{bookingId}/payment")
+    public ResponseEntity<PaymentResponseDTO> createPayment(
+            @PathVariable Long bookingId,
+            HttpServletRequest request
+    ) {
+        String userEmail = getCurrentUserEmail();
+        PaymentResponseDTO response = paymentService.createPaymentUrl(bookingId, userEmail, request);
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("/{bookingId}/cancel")

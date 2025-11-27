@@ -33,7 +33,7 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     @Transactional
-    public Booking createBooking(BookingRequestDTO request, String userEmail) {
+    public BookingResponseDTO createBooking(BookingRequestDTO request, String userEmail) {
 
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
@@ -62,7 +62,9 @@ public class BookingServiceImpl implements BookingService {
                 .status(BookingStatus.PENDING)
                 .build();
 
-        return bookingRepository.save(booking);
+        Booking savedBooking = bookingRepository.save(booking);
+
+        return BookingResponseDTO.fromEntity(savedBooking);
     }
 
     @Override
@@ -111,10 +113,8 @@ public class BookingServiceImpl implements BookingService {
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
-        // Lấy List<Booking> từ DB (đã có @EntityGraph để fetch tour/user)
         List<Booking> bookings = bookingRepository.findByUserId(user.getId());
 
-        // Chuyển đổi (Map) từ Entity sang DTO
         return bookings.stream()
                 .map(BookingResponseDTO::fromEntity)
                 .collect(Collectors.toList());
