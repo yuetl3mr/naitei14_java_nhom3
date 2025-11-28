@@ -38,7 +38,9 @@ public enum ErrorCode {
     BOOKING_INVALID_STATUS(1022, "Cannot cancel booking with status %s", HttpStatus.BAD_REQUEST),
     COMMENT_NOT_FOUND(1023, "Comment not found", HttpStatus.NOT_FOUND),
     COMMENT_NOT_BELONG_TO_USER(1024, "Comment does not belong to this user", HttpStatus.FORBIDDEN),
-    COMMENT_NOT_BELONG_TO_REVIEW(1025, "Comment does not belong to this review", HttpStatus.BAD_REQUEST);;
+    COMMENT_NOT_BELONG_TO_REVIEW(1025, "Comment does not belong to this review", HttpStatus.BAD_REQUEST),
+    INVALID_CREDENTIALS(1026, "Incorrect email or password", HttpStatus.UNAUTHORIZED),
+    UNVERIFIED_EMAIL(1027, "Your account is not verified. Please check your email and activate your account.", HttpStatus.FORBIDDEN);
 
     ErrorCode(int code, String message, HttpStatusCode httpStatusCode) {
         this.code = code;

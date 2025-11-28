@@ -2,5 +2,6 @@ package org.example.framgiabookingtours.enums;
 
 public enum UserStatus {
     ACTIVE,
-    INACTIVE
+    BLOCKED,
+    UNVERIFIED
 }

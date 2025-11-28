@@ -1,13 +1,19 @@
 package org.example.framgiabookingtours.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.example.framgiabookingtours.dto.ApiResponse;
 import org.example.framgiabookingtours.dto.CustomUserDetails;
+import org.example.framgiabookingtours.dto.request.LoginRequestDTO;
+import org.example.framgiabookingtours.dto.response.AuthResponseDTO;
+import org.example.framgiabookingtours.service.AuthService;
 import org.example.framgiabookingtours.service.CustomUserDetailsService;
 import org.example.framgiabookingtours.util.JwtUtils;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -15,18 +21,18 @@ import org.springframework.web.bind.annotation.*;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequestMapping("/api/auth")
 public class AuthController {
-    JwtUtils jwtUtils;
-    CustomUserDetailsService customUserDetailsService;
+    AuthService authService;
 
-    @Operation(summary = "Test gửi accessToken cho user")
-    @GetMapping
-    public ApiResponse<Object> testToken(@RequestParam String email) {
-        CustomUserDetails userDetails = customUserDetailsService.loadUserByUsername(email);
-        String accessToken = jwtUtils.generateAccessToken(userDetails);
-
-        return ApiResponse.builder()
-                .message("OK")
-                .result(accessToken)
+    @PostMapping("/login")
+    public ResponseEntity<ApiResponse<AuthResponseDTO>> login(
+            @Valid @RequestBody LoginRequestDTO loginDto) {
+        AuthResponseDTO result = authService.login(loginDto);
+        ApiResponse<AuthResponseDTO> apiResponse = ApiResponse.<AuthResponseDTO>builder()
+                .code(HttpStatus.OK.value())
+                .result(result)
+                .message("Đăng nhập thành công!")
                 .build();
+
+        return ResponseEntity.ok(apiResponse);
     }
 }

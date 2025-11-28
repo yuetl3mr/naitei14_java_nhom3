@@ -3,6 +3,9 @@ package org.example.framgiabookingtours.exception;
 import org.example.framgiabookingtours.dto.ApiResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -68,5 +71,37 @@ public class GlobalExceptionHandler {
         apiResponse.setMessage(errorCode.getMessage());
 
         return ResponseEntity.badRequest().body(apiResponse);
+    }
+
+    @ExceptionHandler(value = BadCredentialsException.class)
+    ResponseEntity<ApiResponse<?>> handleBadCredentialsException(BadCredentialsException exception) {
+        ErrorCode errorCode = ErrorCode.INVALID_CREDENTIALS;
+
+        return ResponseEntity.status(errorCode.getHttpStatusCode())
+                .body(ApiResponse.builder()
+                        .code(errorCode.getCode())
+                        .message(errorCode.getMessage())
+                        .build());
+    }
+
+    @ExceptionHandler(DisabledException.class)
+    public ResponseEntity<ApiResponse<Object>> handleDisabledException(DisabledException e) {
+        return ResponseEntity.badRequest().body(
+                ApiResponse.builder()
+                        .code(ErrorCode.UNVERIFIED_EMAIL.getCode())
+                        .message(ErrorCode.UNVERIFIED_EMAIL.getMessage())
+                        .build()
+        );
+    }
+
+    // 3. Bắt lỗi tài khoản bị khóa (BLOCKED)
+    @ExceptionHandler(LockedException.class)
+    public ResponseEntity<ApiResponse<Object>> handleLockedException(LockedException e) {
+        return ResponseEntity.badRequest().body(
+                ApiResponse.builder()
+                        .code(ErrorCode.ACCOUNT_LOCKED.getCode())
+                        .message(ErrorCode.ACCOUNT_LOCKED.getMessage())
+                        .build()
+        );
     }
 }

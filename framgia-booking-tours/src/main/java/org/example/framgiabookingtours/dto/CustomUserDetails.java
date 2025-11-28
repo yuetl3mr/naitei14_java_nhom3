@@ -41,7 +41,7 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public boolean isAccountNonLocked() {
-        return true; // Sau này làm tính năng Block user thì sửa logic ở đây
+        return user.getStatus() != UserStatus.BLOCKED;
     }
 
     @Override
@@ -51,6 +51,6 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return user.getStatus() == UserStatus.ACTIVE;
+        return user.getStatus() != UserStatus.UNVERIFIED;
     }
 }
