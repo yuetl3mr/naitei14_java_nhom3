@@ -1,5 +1,6 @@
 package org.example.framgiabookingtours.service.impl;
 
+import lombok.extern.slf4j.Slf4j;
 import org.example.framgiabookingtours.dto.response.TourResponseDTO;
 import org.example.framgiabookingtours.entity.Tour;
 import org.example.framgiabookingtours.enums.TourStatus;
@@ -18,6 +19,7 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class TourServiceImpl implements TourService {
 
     private final TourRepository tourRepository;
@@ -81,5 +83,11 @@ public class TourServiceImpl implements TourService {
                 .averageRating(avgRating)
                 .category(categoryInfo)
                 .build();
+    }
+
+    @Override
+    public Optional<Tour> getTourById(Long tourId) {
+        log.info("Đang lấy chi tiết tour ID: {}", tourId);
+        return tourRepository.findById(tourId);
     }
 }

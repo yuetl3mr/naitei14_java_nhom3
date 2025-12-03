@@ -1,0 +1,111 @@
+<!--chưa có giao diện tour nên thiết kế tạm thời như sau để test-->
+
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+  <meta charset="UTF-8">
+  <title th:text="${tour.name}">Chi tiết Tour</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <style>
+    .text-success { color: #28a745!important; }
+    .text-danger { color: #dc3545!important; }
+    .btn-disabled { cursor: not-allowed; opacity: 0.6; }
+  </style>
+</head>
+<body class="container mt-4">
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+  <a class="navbar-brand" th:href="@{/}">FramgiaTours</a>
+  <div class="collapse navbar-collapse">
+    <ul class="navbar-nav ml-auto">
+      <li class="nav-item">
+        <a class="nav-link" th:href="@{/login}">Đăng nhập (Admin)</a>
+      </li>
+    </ul>
+  </div>
+</nav>
+
+<a th:href="@{/admin/users}" class="btn btn-outline-secondary mb-3">&larr; Quay lại danh sách</a>
+
+<div class="row">
+  <div class="col-md-8">
+    <img th:src="${tour.imageUrl != null ? tour.imageUrl : 'https://placehold.co/800x400'}"
+         class="img-fluid rounded w-100" alt="Ảnh Tour" style="height: 400px; object-fit: cover;">
+    <h2 class="mt-3" th:text="${tour.name}">Tên Tour</h2>
+    <p th:text="${tour.description}">Mô tả chi tiết...</p>
+  </div>
+
+  <div class="col-md-4">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h4 class="card-title text-primary">Thông tin</h4>
+        <p><strong>Giá: </strong>
+          <span class="text-danger font-weight-bold"
+                th:text="${#numbers.formatDecimal(tour.price, 0, 'COMMA', 0, 'POINT') + ' VND'}">
+                    </span>
+        </p>
+        <p><strong>Địa điểm: </strong> <span th:text="${tour.location}"></span></p>
+
+        <p><strong>Số chỗ còn: </strong>
+          <span th:text="${tour.availableSlots}"
+                th:classappend="${tour.availableSlots > 0} ? 'text-success font-weight-bold' : 'text-danger font-weight-bold'">
+                    </span>
+        </p>
+
+        <hr>
+
+        <div sec:authorize="isAuthenticated()">
+
+          <div th:if="${tour.availableSlots > 0}">
+            <h5 class="mb-3">Đặt Tour Ngay</h5>
+            <form th:action="@{/bookings/create}" method="POST" th:object="${bookingForm != null ? bookingForm : 'bookingForm'}">
+              <input type="hidden" name="tourId" th:value="${tour.id}" />
+
+              <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+              <div class="form-group">
+                <label for="startDate">Ngày khởi hành:</label>
+                <input type="date" id="startDate" name="startDate" class="form-control" required>
+              </div>
+
+              <div class="form-group">
+                <label for="numPeople">Số người:</label>
+                <input type="number" id="numPeople" name="numPeople" class="form-control" value="1" min="1"
+                       th:max="${tour.availableSlots}" required>
+                <small class="form-text text-muted">
+                  Tối đa <span th:text="${tour.availableSlots}"></span> người.
+                </small>
+              </div>
+
+              <button type="submit" class="btn btn-success btn-block">Xác nhận Đặt</button>
+            </form>
+          </div>
+
+          <div th:unless="${tour.availableSlots > 0}">
+            <div class="alert alert-danger text-center">
+              <strong>HẾT CHỖ</strong><br>
+              Rất tiếc, tour này hiện đã hết chỗ.<br>Vui lòng chọn ngày khác hoặc tour khác.
+            </div>
+            <button class="btn btn-secondary btn-block btn-disabled" disabled>Không thể đặt</button>
+          </div>
+
+        </div>
+
+        <div sec:authorize="!isAuthenticated()">
+          <div th:if="${tour.availableSlots == 0}" class="alert alert-danger mb-2 text-center">
+            <strong>Tour này đã hết chỗ.</strong>
+          </div>
+
+          <div class="alert alert-info text-center">
+            Vui lòng <a th:href="@{/login}" class="alert-link font-weight-bold">Đăng nhập</a> để đặt tour này.
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

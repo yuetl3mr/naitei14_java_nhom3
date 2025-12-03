@@ -52,7 +52,7 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/my-bookings").authenticated()
+                        .requestMatchers("/my-bookings").permitAll() //.authenticated() tạm thời permit
                         .anyRequest().permitAll() // Tạm permit
                 )
 
