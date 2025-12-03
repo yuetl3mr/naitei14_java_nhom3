@@ -67,8 +67,9 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
                 .authorizeHttpRequests(auth -> auth
-                        .anyRequest().permitAll()
-
+                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/my-bookings").authenticated()
+                        .anyRequest().authenticated()
                 )
 
                 .formLogin(form -> form
