@@ -28,13 +28,12 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
-import java.util.Optional;
 import java.util.Random;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -246,6 +245,60 @@ public class AuthServiceImpl implements AuthService {
         redisTemplate.opsForValue().set(verifyRedisKey, newCode, 5, TimeUnit.MINUTES);
 
         emailService.sendVerificationEmail(resendDTO.getEmail(), newCode);
+    }
+
+    @Override
+    @Transactional
+    public AuthResponseDTO processOAuth2Login(OAuth2User oAuth2User) {
+        String email = oAuth2User.getAttribute("email");
+        String name = oAuth2User.getAttribute("name");
+        String picture = oAuth2User.getAttribute("picture");
+        String googleId = oAuth2User.getAttribute("sub");
+
+        if (email == null || email.isEmpty()) {
+            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
+        }
+
+        User user = userRepository.findByEmail(email)
+                .orElseGet(() -> createNewGoogleUser(email, name, picture, googleId));
+
+        if (user.getGoogleId() == null || user.getGoogleId().isEmpty()) {
+            user.setGoogleId(googleId);
+            user.setStatus(UserStatus.ACTIVE);
+            userRepository.save(user);
+        }
+
+        CustomUserDetails userDetail = userDetailsService.loadUserByUsername(user.getEmail());
+        return generateAuthResponse(user, userDetail);
+    }
+
+    private User createNewGoogleUser(String email, String name, String picture, String googleId) {
+        Role role = roleRepository.findByName("USER")
+                .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND));
+
+        String avatarUrl = (picture != null && !picture.isEmpty())
+                ? picture
+                : "https://ui-avatars.com/api/?name=" +
+                    (name != null ? name.replace(" ", "+") : "User") + "&background=random";
+
+        User user = User.builder()
+                .email(email)
+                .password(null)
+                .googleId(googleId)
+                .provider(Provider.GOOGLE)
+                .roles(Collections.singletonList(role))
+                .status(UserStatus.ACTIVE)
+                .build();
+
+        Profile userProfile = Profile.builder()
+                .fullName(name != null ? name : "Google User")
+                .avatarUrl(avatarUrl)
+                .build();
+
+        user.setProfile(userProfile);
+        userProfile.setUser(user);
+
+        return userRepository.save(user);
     }
 
     private AuthResponseDTO generateAuthResponse(User user, CustomUserDetails userDetail) {
