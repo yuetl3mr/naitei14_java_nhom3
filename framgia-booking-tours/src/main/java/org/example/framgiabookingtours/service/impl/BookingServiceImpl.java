@@ -1,5 +1,6 @@
 package org.example.framgiabookingtours.service.impl;
 
+import org.example.framgiabookingtours.dto.request.AdminDashboardStatsDTO;
 import org.example.framgiabookingtours.dto.request.BookingRequestDTO;
 import org.example.framgiabookingtours.dto.response.BookingResponseDTO;
 import org.example.framgiabookingtours.entity.Booking;
@@ -118,6 +119,35 @@ public class BookingServiceImpl implements BookingService {
         return bookings.stream()
                 .map(BookingResponseDTO::fromEntity)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public AdminDashboardStatsDTO getBookingStats() {
+        log.info("Admin đang lấy thông tin thống kê Dashboard...");
+
+        long pending = bookingRepository.countByStatus(BookingStatus.PENDING);
+        long paid = bookingRepository.countByStatus(BookingStatus.PAID);
+        long confirmed = bookingRepository.countByStatus(BookingStatus.CONFIRMED);
+        long cancelled = bookingRepository.countByStatus(BookingStatus.CANCELLED);
+        long total = pending + paid + confirmed + cancelled;
+
+        // (Bạn cũng có thể dùng bookingRepository.count() để lấy total)
+
+        return AdminDashboardStatsDTO.builder()
+                .totalPending(pending)
+                .totalPaid(paid)
+                .totalConfirmed(confirmed)
+                .totalCancelled(cancelled)
+                .totalBookings(total)
+                .build();
+    }
+
+    @Override
+    public List<Booking> getAllBookings() {
+        // Chúng ta cần một hàm mới trong Repository
+        // (Chúng ta sẽ thêm nó ngay sau đây)
+        log.info("Admin đang lấy tất cả booking...");
+        return bookingRepository.findAllWithUserAndTour();
     }
 }
 

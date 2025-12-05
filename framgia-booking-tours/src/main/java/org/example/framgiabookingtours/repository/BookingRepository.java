@@ -11,10 +11,7 @@ import java.util.List;
 
 @Repository
 public interface BookingRepository extends JpaRepository<Booking, Long> {
-    // Spring Data JPA sẽ tự động tạo các hàm CRUD (save, findById, findAll, delete...)
 
-    // Chúng ta sẽ thêm các hàm truy vấn tùy chỉnh ở đây sau nếu cần
-//     Ví dụ: List<Booking> findByUserId(Long userId);
     @EntityGraph(attributePaths = {"user", "tour"})
     List<Booking> findByUserId(Long userId);
 
