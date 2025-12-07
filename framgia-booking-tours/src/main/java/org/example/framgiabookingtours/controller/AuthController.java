@@ -124,4 +124,28 @@ public class AuthController {
                 .message("Đăng xuất thành công!")
                 .build());
     }
+
+    @PostMapping("/forgot-password")
+    @Operation(summary = "Quên mật khẩu", description = "Gửi mã xác thực để đặt lại mật khẩu")
+    public ResponseEntity<ApiResponse<Void>> forgotPassword(
+            @Valid @RequestBody ForgotPasswordRequestDTO forgotPasswordRequestDTO) {
+        authService.forgotPassword(forgotPasswordRequestDTO);
+
+        return ResponseEntity.ok(ApiResponse.<Void>builder()
+                .code(HttpStatus.OK.value())
+                .message("Mã đặt lại mật khẩu đã được gửi đến email của bạn. Vui lòng kiểm tra email.")
+                .build());
+    }
+
+    @PostMapping("/reset-password")
+    @Operation(summary = "Đặt lại mật khẩu", description = "Đặt lại mật khẩu với mã xác thực")
+    public ResponseEntity<ApiResponse<Void>> resetPassword(
+            @Valid @RequestBody ResetPasswordRequestDTO resetPasswordRequestDTO) {
+        authService.resetPassword(resetPasswordRequestDTO);
+
+        return ResponseEntity.ok(ApiResponse.<Void>builder()
+                .code(HttpStatus.OK.value())
+                .message("Đặt lại mật khẩu thành công! Vui lòng đăng nhập lại.")
+                .build());
+    }
 }

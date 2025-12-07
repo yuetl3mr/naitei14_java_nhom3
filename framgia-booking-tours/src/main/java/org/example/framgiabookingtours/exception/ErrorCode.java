@@ -53,7 +53,12 @@ public enum ErrorCode {
     USER_ALREADY_VERIFIED(1037, "User already verified", HttpStatus.BAD_REQUEST),
     REFRESH_TOKEN_IS_REQUIRED(1038, "Refresh token is required", HttpStatus.BAD_REQUEST),
     INVALID_REFRESH_TOKEN(1039, "Invalid refresh token", HttpStatus.UNAUTHORIZED),
-    REFRESH_TOKEN_NOT_FOUND(1040, "Refresh token not found", HttpStatus.NOT_FOUND);
+    REFRESH_TOKEN_NOT_FOUND(1040, "Refresh token not found", HttpStatus.NOT_FOUND),
+    RESET_PASSWORD_CODE_INVALID(1041, "Password reset code is invalid", HttpStatus.BAD_REQUEST),
+    RESET_PASSWORD_CODE_EXPIRED(1042, "Password reset code has expired", HttpStatus.BAD_REQUEST),
+    RESET_PASSWORD_CODE_IS_REQUIRED(1043, "Password reset code cannot be blank", HttpStatus.BAD_REQUEST),
+    RESEND_RESET_PASSWORD_TOO_SOON(1044, "Please wait before requesting a new password reset code", HttpStatus.TOO_MANY_REQUESTS),
+    CANNOT_RESET_GOOGLE_ACCOUNT_PASSWORD(1045, "Cannot reset password for Google account", HttpStatus.BAD_REQUEST);
 
     ErrorCode(int code, String message, HttpStatusCode httpStatusCode) {
         this.code = code;

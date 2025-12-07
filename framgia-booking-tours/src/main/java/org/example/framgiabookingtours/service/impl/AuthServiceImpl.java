@@ -52,6 +52,7 @@ public class AuthServiceImpl implements AuthService {
     String REFRESH_TOKEN_PREFIX = "refreshtoken:";
     String VERIFICATION_EMAIL_PREFIX = "verification-email:";
     String BLACKLIST_TOKEN_PREFIX = "blacklist:";
+    String RESET_PASSWORD_PREFIX = "reset-password:";
 
     @Override
     public AuthResponseDTO login(LoginRequestDTO loginRequestDTO) {
@@ -236,7 +237,7 @@ public class AuthServiceImpl implements AuthService {
 
         if (existingCode != null && !existingCode.isEmpty()) {
             Long ttl = redisTemplate.getExpire(verifyRedisKey, TimeUnit.SECONDS);
-            if (ttl != null && ttl > 240) {  
+            if (ttl > 240) {
                 throw new AppException(ErrorCode.RESEND_OTP_TOO_SOON);
             }
         }
@@ -271,6 +272,51 @@ public class AuthServiceImpl implements AuthService {
         CustomUserDetails userDetail = userDetailsService.loadUserByUsername(user.getEmail());
         return generateAuthResponse(user, userDetail);
     }
+
+    @Override
+    public void forgotPassword(ForgotPasswordRequestDTO forgotPasswordRequestDTO) {
+        User user = userRepository.findByEmail(forgotPasswordRequestDTO.getEmail())
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        String resetRedisKey = RESET_PASSWORD_PREFIX + user.getEmail();
+        String existingCode = redisTemplate.opsForValue().get(resetRedisKey);
+        if (existingCode != null && !existingCode.isEmpty()) {
+            Long ttl = redisTemplate.getExpire(resetRedisKey, TimeUnit.SECONDS);
+            if (ttl > 240) {
+                throw new AppException(ErrorCode.RESEND_RESET_PASSWORD_TOO_SOON);
+            }
+        }
+
+        String code = generateVerificationCode();
+        redisTemplate.opsForValue().set(resetRedisKey, code, 5, TimeUnit.MINUTES);
+
+        emailService.sendPasswordResetEmail(forgotPasswordRequestDTO.getEmail(), code);
+    }
+
+    @Override
+    public void resetPassword(ResetPasswordRequestDTO resetPasswordRequestDTO) {
+        String resetRedisKey = RESET_PASSWORD_PREFIX + resetPasswordRequestDTO.getEmail();
+        String savedCode = redisTemplate.opsForValue().get(resetRedisKey);
+
+        if (savedCode == null || savedCode.isEmpty()) {
+            throw new AppException(ErrorCode.RESET_PASSWORD_CODE_EXPIRED);
+        }
+
+        if (!savedCode.equals(resetPasswordRequestDTO.getCode())) {
+            throw new AppException(ErrorCode.RESET_PASSWORD_CODE_INVALID);
+        }
+
+        User user = userRepository.findByEmail(resetPasswordRequestDTO.getEmail())
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        user.setPassword(passwordEncoder.encode(resetPasswordRequestDTO.getNewPassword()));
+        userRepository.save(user);
+
+        redisTemplate.delete(resetRedisKey);
+        String refreshRedisKey = REFRESH_TOKEN_PREFIX + user.getEmail();
+        redisTemplate.delete(refreshRedisKey);
+    }
+
 
     private User createNewGoogleUser(String email, String name, String picture, String googleId) {
         Role role = roleRepository.findByName("USER")

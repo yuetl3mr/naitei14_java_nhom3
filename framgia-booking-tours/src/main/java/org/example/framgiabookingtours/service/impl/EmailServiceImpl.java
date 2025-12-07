@@ -55,6 +55,126 @@ public class EmailServiceImpl implements EmailService {
         }
     }
 
+    @Override
+    @Async("taskExecutor")
+    public void sendPasswordResetEmail(String toEmail, String code) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setFrom(fromEmail, senderName);
+            helper.setTo(toEmail);
+            helper.setSubject("Đặt lại mật khẩu - Framgia Booking Tours");
+
+            String htmlContent = buildPasswordResetEmailContent(code);
+            helper.setText(htmlContent, true);
+
+            mailSender.send(message);
+            log.info("Password reset email sent successfully to: {}", toEmail);
+
+        } catch (MessagingException e) {
+            log.error("Failed to send password reset email to: {}", toEmail, e);
+            throw new RuntimeException("Could not send password reset email", e);
+        } catch (Exception e) {
+            log.error("Unexpected error sending password reset email to: {}", toEmail, e);
+            throw new RuntimeException("Unexpected error sending email", e);
+        }
+    }
+
+    private String buildPasswordResetEmailContent(String code) {
+        return """
+            <!DOCTYPE html>
+            <html lang="vi">
+            <head>
+                <meta charset="UTF-8">
+                <style>
+                    body {
+                        font-family: Arial, sans-serif;
+                        line-height: 1.6;
+                        color: #333;
+                        max-width: 600px;
+                        margin: 0 auto;
+                        padding: 20px;
+                    }
+                    .container {
+                        background-color: #f9f9f9;
+                        border-radius: 10px;
+                        padding: 30px;
+                        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+                    }
+                    .header {
+                        text-align: center;
+                        color: #2c3e50;
+                        margin-bottom: 30px;
+                    }
+                    .code-box {
+                        background-color: #fff;
+                        border: 2px dashed #e74c3c;
+                        border-radius: 8px;
+                        padding: 20px;
+                        text-align: center;
+                        margin: 30px 0;
+                    }
+                    .code {
+                        font-size: 32px;
+                        font-weight: bold;
+                        color: #e74c3c;
+                        letter-spacing: 5px;
+                        font-family: 'Courier New', monospace;
+                    }
+                    .footer {
+                        text-align: center;
+                        color: #7f8c8d;
+                        font-size: 12px;
+                        margin-top: 30px;
+                        padding-top: 20px;
+                        border-top: 1px solid #ddd;
+                    }
+                    .warning {
+                        background-color: #fff3cd;
+                        border-left: 4px solid #ffc107;
+                        padding: 15px;
+                        margin-top: 20px;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <h1>🎫 Framgia Booking Tours</h1>
+                        <h2>Đặt lại mật khẩu</h2>
+                    </div>
+                    
+                    <p>Xin chào,</p>
+                    <p>Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản của bạn. Vui lòng sử dụng mã xác thực bên dưới để đặt lại mật khẩu:</p>
+                    
+                    <div class="code-box">
+                        <p style="margin: 0; color: #7f8c8d; font-size: 14px;">MÃ ĐẶT LẠI MẬT KHẨU</p>
+                        <div class="code">%s</div>
+                        <p style="margin: 10px 0 0 0; color: #7f8c8d; font-size: 12px;">Mã có hiệu lực trong 5 phút</p>
+                    </div>
+                    
+                    <p>Nhập mã này vào trang đặt lại mật khẩu để tiếp tục.</p>
+                    
+                    <div class="warning">
+                        <strong>⚠️ Lưu ý bảo mật:</strong>
+                        <ul style="margin: 10px 0 0 20px; padding: 0;">
+                            <li>Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này và đổi mật khẩu ngay.</li>
+                            <li>Không chia sẻ mã này với bất kỳ ai.</li>
+                            <li>Mã này chỉ có thể sử dụng một lần.</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="footer">
+                        <p>Email này được gửi tự động, vui lòng không trả lời.</p>
+                        <p>&copy; 2024 Framgia Booking Tours. All rights reserved.</p>
+                    </div>
+                </div>
+            </body>
+            </html>
+            """.formatted(code);
+    }
+
     private String buildVerificationEmailContent(String code) {
         return """
             <!DOCTYPE html>

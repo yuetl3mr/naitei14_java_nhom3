@@ -12,4 +12,6 @@ public interface AuthService {
     AuthResponseDTO refreshToken(RefreshTokenRequestDTO refreshDTO);
     void logout(String authHeader);
     AuthResponseDTO processOAuth2Login(OAuth2User oAuth2User);
+    void forgotPassword(ForgotPasswordRequestDTO forgotPasswordRequestDTO);
+    void resetPassword(ResetPasswordRequestDTO resetPasswordRequestDTO);
 }
