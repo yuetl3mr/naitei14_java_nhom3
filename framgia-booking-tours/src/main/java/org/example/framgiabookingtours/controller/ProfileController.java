@@ -14,6 +14,7 @@ import org.example.framgiabookingtours.exception.ErrorCode;
 import org.example.framgiabookingtours.service.ImageUploadService;
 import org.example.framgiabookingtours.service.ProfileService;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -25,25 +26,24 @@ public class ProfileController {
 	private final ProfileService profileService;
 	private final ImageUploadService imageUploadService;
 
-	@PutMapping
-	public ApiResponse<ProfileResponseDTO> updateMyProfile(@RequestBody @Valid ProfileUpdateRequestDTO request,
-			// TẠM THỜI: Lấy email từ Header để test khi chưa có Security
-			// Sau này có Security thì dùng @AuthenticationPrincipal hoặc
-			// SecurityContextHolder
-			@RequestHeader(value = "X-User-Email", defaultValue = "test@gmail.com") String userEmail
+	private String getCurrentUserEmail() {
+		var authentication = SecurityContextHolder.getContext().getAuthentication();
+		return authentication.getName();
+	}
 
-	// Lấy email từ Security Context (User đang đăng nhập)
-	// var authentication = SecurityContextHolder.getContext().getAuthentication();
-	// String userEmail = authentication.getName();
-	) {
+	@PutMapping
+	public ApiResponse<ProfileResponseDTO> updateMyProfile(@RequestBody @Valid ProfileUpdateRequestDTO request) {
+		String userEmail = getCurrentUserEmail();
+
 		ProfileResponseDTO result = profileService.updateProfile(request, userEmail);
 
 		return ApiResponse.<ProfileResponseDTO>builder().result(result).message("Update profile success").build();
 	}
 
 	@PostMapping(value = "/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-	public ApiResponse<ProfileResponseDTO> uploadAndSetAvatar(@RequestParam("file") MultipartFile file,
-			@RequestHeader(value = "X-User-Email", defaultValue = "test@gmail.com") String userEmail) {
+	public ApiResponse<ProfileResponseDTO> uploadAndSetAvatar(@RequestParam("file") MultipartFile file) {
+		String userEmail = getCurrentUserEmail();
+
 		if (file == null || file.isEmpty()) {
 			throw new AppException(ErrorCode.FILE_NULL);
 		}
@@ -72,8 +72,9 @@ public class ProfileController {
 
 	@PutMapping("/banking")
 	public ApiResponse<ProfileResponseDTO> updateBankingInfo(
-			@RequestBody @Valid ProfileBankUpdateRequestDTO bankRequest,
-			@RequestHeader(value = "X-User-Email", defaultValue = "test@gmail.com") String userEmail) {
+			@RequestBody @Valid ProfileBankUpdateRequestDTO bankRequest) {
+		String userEmail = getCurrentUserEmail();
+
 		ProfileUpdateRequestDTO fullRequest = new ProfileUpdateRequestDTO();
 
 		fullRequest.setBankName(bankRequest.getBankName());
