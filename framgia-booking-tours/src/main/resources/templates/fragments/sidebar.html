@@ -33,8 +33,15 @@
 			   class="menu-item flex items-center px-6 py-3 text-white hover:bg-blue-800 transition-colors duration-200">
 				<i class="fas fa-users w-6"></i> <span class="ml-3">Quản lý Người dùng</span>
 			</a>
+			
+			<a th:href="@{/admin/categories}"
+				th:classappend="${activeMenu == 'categories'} ? 'active' : ''"
+				class="menu-item flex items-center px-6 py-3 text-white hover:bg-blue-800">
+				<i class="fas fa-map-marked-alt w-6"></i> <span class="ml-3">Quản
+					lý Danh mục</span>
+			</a>
 
-			<a th:href="@{/admin/tours}"
+			<a th:href="@{/admin/tours/list}"
 			   th:classappend="${activeMenu == 'tours'} ? 'active' : ''"
 			   class="menu-item flex items-center px-6 py-3 text-white hover:bg-blue-800 transition-colors duration-200">
 				<i class="fas fa-map-marked-alt w-6"></i> <span class="ml-3">Quản lý Tour</span>

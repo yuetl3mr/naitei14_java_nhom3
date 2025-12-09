@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title th:text="${pageTitle}">Quản lý Danh mục</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet"
+	href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" th:href="@{/css/admin.css}">
+</head>
+<body class="bg-gray-50 font-sans">
+
+	<div th:replace="~{fragments/sidebar :: sidebar}"></div>
+	<div class="ml-64">
+		<div th:replace="~{fragments/header :: header}"></div>
+
+		<main class="p-8">
+
+			<div th:if="${successMessage}" class="alert-box alert-success"
+				role="alert">[[${successMessage}]]</div>
+			<div th:if="${errorMessage}" class="alert-box alert-danger"
+				role="alert">[[${errorMessage}]]</div>
+
+			<div class="bg-white rounded-xl shadow-md overflow-hidden">
+				<div
+					class="p-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-white">
+					<div class="flex justify-between items-center mb-4">
+						<h3 class="text-2xl font-bold text-gray-900">Quản lý Danh mục</h3>
+
+						<button type="button" onclick="showAddModal()"
+							class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center shadow-sm">
+							<i class="fas fa-plus mr-2"></i> Tạo Mới
+						</button>
+					</div>
+
+					<form th:action="@{/admin/categories}" method="get"
+						class="flex flex-wrap gap-3 items-end">
+						<div class="relative flex-1 min-w-[250px]">
+							<input type="text" name="q" th:value="${currentKeyword}"
+								placeholder="Tìm kiếm theo tên, mô tả..."
+								class="w-full border border-gray-300 rounded-lg pl-10 pr-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+							<i class="fas fa-search absolute left-3 top-2.5 text-gray-400"></i>
+						</div>
+						<button type="submit"
+							class="bg-blue-600 text-white px-6 py-2 rounded-lg text-sm hover:bg-blue-700 transition shadow-sm font-medium">
+							Lọc</button>
+					</form>
+				</div>
+
+				<div class="overflow-x-auto">
+					<table class="w-full text-left border-collapse">
+						<thead
+							class="bg-gray-50 text-gray-600 text-xs uppercase font-bold border-b">
+							<tr>
+								<th class="px-6 py-4">ID</th>
+								<th class="px-6 py-4">Tên Danh mục</th>
+								<th class="px-6 py-4">Mô tả</th>
+								<th class="px-6 py-4">Ngày tạo</th>
+								<th class="px-6 py-4 text-center">Action</th>
+							</tr>
+						</thead>
+						<tbody class="divide-y divide-gray-100 text-sm">
+							<tr th:each="cat : ${categories}"
+								class="hover:bg-blue-50 transition">
+								<td class="px-6 py-4 font-medium text-gray-500"
+									th:text="'#' + ${cat.id}"></td>
+								<td class="px-6 py-4 font-bold text-gray-900"
+									th:text="${cat.name}"></td>
+								<td class="px-6 py-4 text-gray-600 max-w-sm whitespace-normal"
+									th:text="${cat.description}"></td>
+								<td class="px-6 py-4 text-gray-600"
+									th:text="${#temporals.format(cat.createdAt, 'dd-MM-yyyy HH:mm')}"></td>
+
+								<td class="px-6 py-4 text-center whitespace-nowrap">
+									<button type="button"
+										th:attr="onclick=|showEditModal(${cat.id}, '${#strings.escapeJavaScript(cat.name)}', '${#strings.escapeJavaScript(cat.description)}')|"
+										class="inline-block bg-white border border-gray-200 text-blue-600 hover:bg-blue-50 hover:text-blue-800 px-3 py-1.5 rounded-lg transition shadow-sm">
+										<i class="fas fa-edit mr-1"></i> Sửa
+									</button> <a th:href="@{'/admin/categories/delete/' + ${cat.id}}"
+									th:onclick="|return confirm('Bạn có chắc chắn muốn xóa danh mục ID: ${cat.id}?');|"
+									class="inline-block bg-white border border-gray-200 text-red-600 hover:bg-red-50 hover:text-red-800 px-3 py-1.5 rounded-lg transition shadow-sm ml-2">
+										<i class="fas fa-trash mr-1"></i> Xóa
+								</a>
+								</td>
+							</tr>
+							<tr th:if="${categories.empty}">
+								<td colspan="5" class="px-6 py-8 text-center text-gray-500">
+									<i class="fas fa-box-open text-xl mr-2"></i> Chưa có danh mục
+									nào được tạo.
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+
+				<div
+					class="px-6 py-4 bg-gray-50 border-t flex justify-end items-center text-sm text-gray-600">
+					<div>
+						Tổng cộng: <span class="font-bold"
+							th:text="${#lists.size(categories)}">0</span> danh mục
+					</div>
+				</div>
+			</div>
+		</main>
+
+		<div th:replace="~{fragments/footer :: footer}"></div>
+	</div>
+
+	<div id="categoryModal" class="modal">
+		<div class="modal-content">
+			<div
+				class="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-4 rounded-t-xl flex justify-between items-center">
+				<div class="flex items-center space-x-3">
+					<i class="fas fa-tags text-3xl"></i>
+					<h3 class="text-xl font-bold" id="modalTitle">Tạo Danh mục Mới</h3>
+				</div>
+				<button type="button"
+					class="text-white hover:text-gray-200 text-3xl leading-none"
+					onclick="closeModal()">&times;</button>
+			</div>
+
+			<!-- Form sử dụng th:object để binding dữ liệu -->
+			<form id="categoryForm" th:action="@{/admin/categories/save}"
+				method="post" th:object="${categoryForm}" class="p-6">
+
+				<input type="hidden" th:field="*{id}" id="cat-id" />
+
+				<div class="mb-4">
+					<label for="cat-name"
+						class="block text-sm font-semibold text-gray-700 mb-2">Tên
+						Danh mục (*)</label> <input type="text" id="cat-name" th:field="*{name}"
+						class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+						placeholder="VD: Du lịch Biển Đảo" required />
+				</div>
+
+				<div class="mb-6">
+					<label for="cat-description"
+						class="block text-sm font-semibold text-gray-700 mb-2">Mô
+						tả</label>
+					<textarea id="cat-description" th:field="*{description}" rows="3"
+						class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+						placeholder="Mô tả ngắn gọn về danh mục..."></textarea>
+				</div>
+
+				<div class="mt-6 flex justify-end space-x-3 pt-4 border-t">
+					<button type="button" onclick="closeModal()"
+						class="px-6 py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition">
+						Hủy</button>
+					<button type="submit"
+						class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition">
+						<i class="fas fa-save mr-2"></i>Lưu Danh mục
+					</button>
+				</div>
+			</form>
+		</div>
+	</div>
+
+	<script th:inline="javascript">
+        /*<![CDATA[*/
+        const categoryModal = document.getElementById('categoryModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const formIdInput = document.getElementById('cat-id');
+        const formNameInput = document.getElementById('cat-name');
+        const formDescInput = document.getElementById('cat-description');
+        
+        function closeModal() {
+            categoryModal.style.display = 'none';
+        }
+
+        function showAddModal() {
+        	modalTitle.textContent = 'Tạo Danh mục Mới';
+
+            document.getElementById('categoryForm').reset(); 
+            formIdInput.value = '';
+
+            categoryModal.style.display = 'block';
+        }
+        
+        function showEditModal(id, nameEscaped, descriptionEscaped) {
+            
+            const decodeString = (escapedStr) => {
+                try {
+                    return JSON.parse('"' + escapedStr + '"');
+                } catch (e) {
+                    return escapedStr;
+                }
+            };
+
+            const decodedName = decodeString(nameEscaped);
+            const decodedDescription = decodeString(descriptionEscaped);
+
+            modalTitle.textContent = 'Sửa Danh mục ID: ' + id;
+            
+            formIdInput.value = id;
+            formNameInput.value = decodedName;
+            formDescInput.value = decodedDescription;
+
+            categoryModal.style.display = 'block';
+        }
+        
+        window.onclick = function(event) {
+            if (event.target == categoryModal) {
+                closeModal();
+            }
+        }
+        
+        window.onload = function() {
+            const hasErrorMessage = /*[[ ${errorMessage != null} ]]*/ false;
+            
+            const formId = formIdInput.value;
+            const formNameEscaped = formNameInput.value;
+            const formDescEscaped = formDescInput.value;
+
+            if (hasErrorMessage || formId) {
+                if (formId) {
+                    showEditModal(formId, formNameEscaped, formDescEscaped);
+                } else if (hasErrorMessage) {
+                     showAddModal();
+                }
+            }
+        };
+        /*]]>*/
+    </script>
+</body>
+</html>

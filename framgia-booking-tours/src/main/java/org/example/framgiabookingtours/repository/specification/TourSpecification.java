@@ -1,8 +1,9 @@
-package org.example.framgiabookingtours.repository;
+package org.example.framgiabookingtours.repository.specification;
 
 import org.example.framgiabookingtours.entity.Tour;
 import org.example.framgiabookingtours.enums.TourStatus;
 import org.springframework.data.jpa.domain.Specification;
+
 import jakarta.persistence.criteria.Predicate;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -10,13 +11,11 @@ import java.util.List;
 
 public class TourSpecification {
 
-    // Specification: Chỉ lấy Tour có status là AVAILABLE 
     public static Specification<Tour> isAvailable() {
         return (root, query, criteriaBuilder) -> 
             criteriaBuilder.equal(root.get("status"), TourStatus.AVAILABLE);
     }
     
-    // Specification: Tìm kiếm theo từ khóa (Name hoặc Location)
     public static Specification<Tour> hasKeyword(String keyword) {
         if (keyword == null || keyword.isBlank()) {
             return null;
@@ -26,12 +25,12 @@ public class TourSpecification {
         return (root, query, criteriaBuilder) -> {
             Predicate nameLike = criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), pattern);
             Predicate locationLike = criteriaBuilder.like(criteriaBuilder.lower(root.get("location")), pattern);
-
-            return criteriaBuilder.or(nameLike, locationLike);
+            Predicate descriptionLike = criteriaBuilder.like(criteriaBuilder.lower(root.get("description")), pattern);
+            
+            return criteriaBuilder.or(nameLike, locationLike, descriptionLike);
         };
     }
-
-    // Lọc theo Category ID
+    
     public static Specification<Tour> hasCategoryId(Long categoryId) {
         if (categoryId == null) {
             return null;
@@ -40,7 +39,6 @@ public class TourSpecification {
             criteriaBuilder.equal(root.get("category").get("id"), categoryId);
     }
 
-    // Specification: Lọc theo khoảng giá (Price Range)
     public static Specification<Tour> hasPriceRange(BigDecimal minPrice, BigDecimal maxPrice) {
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
@@ -58,4 +56,24 @@ public class TourSpecification {
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };
     }
+    
+    public static Specification<Tour> hasStatus(String statusParam) {
+        return (root, query, criteriaBuilder) -> {
+            if (statusParam == null 
+                || statusParam.isBlank() 
+                || statusParam.equalsIgnoreCase("null")) {
+
+                return criteriaBuilder.conjunction(); // Không filter theo status
+            }
+
+            try {
+                TourStatus tourStatus = TourStatus.valueOf(statusParam.toUpperCase());
+                return criteriaBuilder.equal(root.get("status"), tourStatus);
+            } catch (IllegalArgumentException e) {
+                // Status không hợp lệ → không trả về dữ liệu
+                return criteriaBuilder.disjunction();
+            }
+        };
+    }
+
 }

@@ -7,7 +7,7 @@ import org.example.framgiabookingtours.dto.response.CategoryResponseDTO;
 
 public interface CategoryService {
 	
-	List<CategoryResponseDTO> findAllCategories();
+	List<CategoryResponseDTO> findAllCategories(String keyword);
 
 	CategoryResponseDTO saveCategory(CategoryRequestDTO request);
 

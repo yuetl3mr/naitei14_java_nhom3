@@ -20,8 +20,10 @@ public class CategoryController {
     private final CategoryService categoryService;
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<CategoryResponseDTO>>> listCategories() {
-        List<CategoryResponseDTO> categories = categoryService.findAllCategories();
+    public ResponseEntity<ApiResponse<List<CategoryResponseDTO>>> listCategories(
+            @RequestParam(value = "q", required = false) String keyword) {
+        
+        List<CategoryResponseDTO> categories = categoryService.findAllCategories(keyword);
         
         return ResponseEntity.ok(ApiResponse.<List<CategoryResponseDTO>>builder()
                 .code(1000)

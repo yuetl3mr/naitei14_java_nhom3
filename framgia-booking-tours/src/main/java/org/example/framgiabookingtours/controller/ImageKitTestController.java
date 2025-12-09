@@ -1,6 +1,6 @@
 package org.example.framgiabookingtours.controller;
 
-import java.util.UUID;
+import java.io.IOException;
 
 import org.example.framgiabookingtours.service.ImageUploadService;
 import org.springframework.http.HttpStatus;
@@ -22,17 +22,21 @@ public class ImageKitTestController {
     public ResponseEntity<String> uploadTest(
             @RequestPart("imageFile") MultipartFile imageFile) {
         try {
-            String newFileName = UUID.randomUUID().toString() + ".jpg";
-            String folderName = "test-uploads";
+        	String folderName = "test-uploads";
+            String baseFileName = imageFile.getOriginalFilename(); // <<< Lấy tên file gốc
 
-            String imageUrl = imageUploadService.uploadFile(imageFile, newFileName, folderName);
+            String imageUrl = imageUploadService.uploadFile(imageFile, baseFileName, folderName);
 
             return ResponseEntity.ok("Upload thành công. URL: " + imageUrl);
 
-        } catch (Exception e) {
+        } catch (IOException e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                                  .body("Upload thất bại: " + e.getMessage());
+        } catch (Exception e) { 
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                 .body("Upload thất bại do lỗi không xác định: " + e.getMessage());
         }
     }
 }

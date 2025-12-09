@@ -36,7 +36,7 @@ INSERT IGNORE INTO tours (id, category_id, creator_id, name, description, locati
 (16, 5, 2, 'Hàn Quốc – Seoul 5N4Đ', 'Gyeongbokgung, Namsan Tower, Myeongdong.', 'Seoul, Hàn Quốc', 16500000.00, 5, 30, 'https://ik.imagekit.io/28926333pl/tours/seoul_tour.jpg', 'AVAILABLE'),
 
 -- Sinh thái
-(17, 6, 2, 'Rừng Tràm Trà Sư – Sinh thái miền Tây', 'Đi xuồng, rừng ngập nước.', 'An Giang, Việt Nam', 900000.00, 1, 70, 'https://ik.imagekit.io/28926333pl/tours/tra_su_ecotour.jpg', 'AVAILAsBLE'),
+(17, 6, 2, 'Rừng Tràm Trà Sư – Sinh thái miền Tây', 'Đi xuồng, rừng ngập nước.', 'An Giang, Việt Nam', 900000.00, 1, 70, 'https://ik.imagekit.io/28926333pl/tours/tra_su_ecotour.jpg', 'AVAILABLE'),
 (18, 6, 2, 'Vườn Quốc Gia Cúc Phương', 'Khám phá rừng nguyên sinh.', 'Ninh Bình, Việt Nam', 1800000.00, 2, 40, 'https://ik.imagekit.io/28926333pl/tours/cucphuong_forest.jpg', 'AVAILABLE'),
 
 -- Ẩm thực

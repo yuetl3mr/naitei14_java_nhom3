@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title th:text="${pageTitle}">Quản lý Tour du lịch</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet"
+	href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" th:href="@{/css/admin.css}">
+</head>
+<body class="bg-gray-50 font-sans">
+	<div th:replace="~{fragments/sidebar :: sidebar}"></div>
+	<div class="ml-64">
+		<div th:replace="~{fragments/header :: header}"></div>
+
+		<main class="p-8">
+			<div th:if="${successMessage}" class="alert-box alert-success"
+				role="alert">[[${successMessage}]]</div>
+			<div th:if="${errorMessage}" class="alert-box alert-danger"
+				role="alert">[[${errorMessage}]]</div>
+
+			<div class="bg-white rounded-xl shadow-md overflow-hidden">
+				<div
+					class="p-6 border-b border-gray-200 bg-gradient-to-r from-orange-50 to-white">
+					<div class="flex justify-between items-center">
+						<div>
+							<h3 class="text-2xl font-bold text-gray-900">
+							Quản lý Tour Du Lịch</h3>
+						</div>
+
+						<button type="button" onclick="showAddModal()"
+							class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center shadow-sm">
+							<i class="fas fa-plus mr-2"></i> Tạo Mới
+						</button>
+					</div>
+
+					<form th:action="@{/admin/tours}" method="get"
+						class="mt-4 flex flex-wrap gap-3">
+
+						<!-- Input ẩn để duy trì trạng thái phân trang/sắp xếp -->
+						<input type="hidden" name="page" th:value="${currentPage}">
+						<input type="hidden" name="size" th:value="${size}"> 
+						<input type="hidden" name="sortBy" th:value="${sortBy}"> 
+						<input type="hidden" name="sortDirection" th:value="${sortDirection}">
+						<div
+							class="flex flex-wrap gap-3 border p-3 rounded-lg bg-gray-100">
+							<select name="categoryId"
+								class="border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:outline-none">
+								<option value="">Tất cả danh mục</option>
+								<option th:each="cat : ${categories}" th:value="${cat.id}"
+									th:text="${cat.name}"
+									th:selected="${selectedCategory != null and cat.id == selectedCategory}"></option>
+							</select>
+
+							<select name="status"
+								class="border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:outline-none">
+								<option value="">Tất cả trạng thái</option>
+								<option value="AVAILABLE"
+									th:selected="${param.status == 'AVAILABLE'}">AVAILABLE</option>
+								<option value="UNAVAILABLE"
+									th:selected="${param.status == 'UNAVAILABLE'}">UNAVAILABLE</option>
+							</select> 
+							
+							<input type="number" name="priceMin" placeholder="Giá từ (VNĐ)"
+								th:value="${param.priceMin}" step="1000000"
+								class="border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:outline-none w-36">
+							<input type="number" name="priceMax" placeholder="Giá đến (VNĐ)"
+								th:value="${param.priceMax}" step="1000000"
+								class="border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:outline-none w-36">
+							
+							<button type="submit"
+								class="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm hover:bg-blue-700 transition shadow-sm font-medium">
+								<i class="fas fa-filter mr-2"></i>Lọc
+							</button>
+							<a th:href="@{/admin/tours(size=${size})}"
+								class="bg-gray-300 text-gray-800 px-5 py-2 rounded-lg text-sm transition shadow-sm">
+								Đặt lại </a>
+						</div>
+						<div class="relative flex-1 min-w-[300px]">
+							<input type="text" name="keyword" th:value="${keyword}"
+								placeholder="Tìm kiếm (Tên, Địa điểm, Mô tả...)"
+								class="w-full border border-gray-300 rounded-lg pl-10 pr-4 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:outline-none">
+							<i class="fas fa-search absolute left-3 top-2.5 text-gray-400"></i>
+						</div>
+					</form>
+				</div>
+
+				<!-- list tours -->
+				<div class="p-6">
+					<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+						id="toursContainer">
+
+						<div th:each="tour : ${tourPage.content}"
+							class="tour-card bg-white rounded-xl overflow-hidden shadow-md">
+							<div class="relative">
+								<img th:src="${tour.imageUrl}" th:alt="${tour.name}"
+									class="w-full h-48 object-cover"
+									onerror="this.onerror=null; this.src='https://placehold.co/500x300/aaaaaa/ffffff?text=Image+Missing';">
+
+								<span
+									class="absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-semibold text-white"
+									th:classappend="${tour.status.name() == 'AVAILABLE' ? 'status-available' : 'status-unavailable'}"
+									th:text="${tour.status.name() == 'AVAILABLE' ? 'Còn chỗ' : 'Hết/Ẩn'}">
+									AVAILABLE </span>
+
+								<span
+									class="absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-semibold bg-blue-500 text-white"
+									th:text="${tour.category != null ? tour.category.name : 'N/A'}">
+									Du lịch Biển </span>
+							</div>
+
+							<div class="p-5">
+								<h4 class="text-lg font-bold text-gray-900 mb-2 line-clamp-2"
+									th:text="${tour.name}">Tour Đà Nẵng</h4>
+
+								<div class="flex items-center text-sm text-gray-600 mb-3">
+									<i class="fas fa-map-marker-alt text-red-500 mr-2"></i> <span
+										th:text="${tour.location}">Đà Nẵng</span>
+								</div>
+
+								<div class="flex items-center justify-between mb-4">
+									<div class="flex items-center text-sm text-gray-600">
+										<i class="fas fa-clock text-blue-500 mr-2"></i> <span
+											th:text="${tour.durationDays + ' ngày'}">3 ngày</span>
+									</div>
+									<div class="flex items-center text-sm text-gray-600">
+										<i class="fas fa-users text-green-500 mr-2"></i> <span
+											th:text="${tour.availableSlots + ' chỗ'}">15 chỗ</span>
+									</div>
+								</div>
+
+								<div class="border-t pt-4 flex items-center justify-between">
+									<div>
+										<p class="text-xs text-gray-500">Giá từ</p>
+										<p class="text-xl font-bold text-orange-600"
+											th:text="${#numbers.formatDecimal(tour.price, 0, 'COMMA', 0, 'POINT') + ' ₫'}">5,500,000
+											₫</p>
+									</div>
+
+									<div class="flex space-x-2">
+										<!-- Edit -->
+										<button th:data-tour-id="${tour.id}"
+											onclick="redirectForEdit(this)"
+											class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm transition">
+											<i class="fas fa-edit"></i>
+										</button>
+										<!-- Toggle Status -->
+										<button th:onclick="|toggleStatus('${tour.id}')|"
+											class="bg-orange-600 hover:bg-orange-700 text-white px-3 py-2 rounded-lg text-sm transition"
+											th:title="${tour.status.name() == 'AVAILABLE' ? 'Gỡ Tour' : 'Đăng Tour'}">
+											<i th:classappend="${tour.status.name() == 'AVAILABLE'} ? 'fa-eye-slash' : 'fa-eye'"
+												class="fas"></i>
+										</button>
+										<!-- Delete -->
+										<button th:onclick="|deleteTour('${tour.id}')|"
+											class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg text-sm transition"
+											title="Xóa Tour">
+											<i class="fas fa-trash-alt"></i>
+										</button>
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<div th:if="${tourPage.empty}"
+							class="col-span-full p-10 text-center text-gray-500">
+							<i class="fas fa-search-minus text-5xl mb-4"></i>
+							<p class="text-xl">Không tìm thấy tour nào phù hợp với điều
+								kiện tìm kiếm/lọc.</p>
+						</div>
+
+					</div>
+				</div>
+
+				<div
+					class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
+					<div class="text-sm text-gray-600"
+						th:if="${tourPage.totalPages > 0}">
+						Hiển thị <span class="font-semibold"
+							th:text="${tourPage.pageable.offset + 1}">1</span> - <span
+							class="font-semibold"
+							th:text="${tourPage.numberOfElements + tourPage.pageable.offset}">12</span>
+						trong tổng số <span class="font-semibold"
+							th:text="${tourPage.totalElements}">42</span> tour
+					</div>
+
+					<!-- Logic Phân Trang -->
+					<div class="flex space-x-2" th:if="${tourPage.totalPages > 1}">
+						<a
+							th:href="@{/admin/tours(page=${currentPage - 1}, size=${size}, sortBy=${sortBy}, sortDirection=${sortDirection}, q=${keyword}, category_id=${selectedCategory}, status=${param.status}, price_min=${param.price_min}, price_max=${param.price_max})}"
+							th:classappend="${tourPage.first} ? 'pointer-events-none opacity-50' : ''"
+							class="px-3 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-100 text-gray-700">
+							<i class="fas fa-chevron-left"></i>
+						</a>
+						<th:block
+							th:with="start=${currentPage > 2 ? currentPage - 2 : 0}, 
+                                          end=${currentPage + 2 < tourPage.totalPages ? currentPage + 2 : tourPage.totalPages - 1}">
+							<a th:each="i : ${#numbers.sequence(start, end)}"
+								th:href="@{/admin/tours(page=${i}, size=${size}, sortBy=${sortBy}, sortDirection=${sortDirection}, q=${keyword}, category_id=${selectedCategory}, status=${param.status}, price_min=${param.price_min}, price_max=${param.price_max})}"
+								th:text="${i + 1}"
+								th:classappend="${currentPage == i} ? 'bg-orange-600 text-white border-orange-600' : 'bg-white hover:bg-gray-100 text-gray-700'"
+								class="px-3 py-2 border rounded-lg text-sm transition"> </a>
+						</th:block>
+						<a
+							th:href="@{/admin/tours(page=${currentPage + 1}, size=${size}, sortBy=${sortBy}, sortDirection=${sortDirection}, q=${keyword}, category_id=${selectedCategory}, status=${param.status}, price_min=${param.price_min}, price_max=${param.price_max})}"
+							th:classappend="${tourPage.last} ? 'pointer-events-none opacity-50' : ''"
+							class="px-3 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-100 text-gray-700">
+							<i class="fas fa-chevron-right"></i>
+						</a>
+					</div>
+				</div>
+			</div>
+		</main>
+
+		<div th:replace="~{fragments/footer :: footer}"></div>
+	</div>
+
+	<!-- ================= MODAL ADD / EDIT TOUR ================= -->
+	<div id="tourModal" class="modal">
+		<div class="modal-content shadow-lg">
+			<div
+				class="flex justify-between items-center border-b p-5 bg-blue-600 text-white rounded-t-xl">
+				<h3 id="modalTitle" class="text-xl font-bold">Thêm tour mới</h3>
+				<button onclick="closeModal()"
+					class="text-white hover:text-gray-200">
+					<i class="fas fa-times text-xl"></i>
+				</button>
+			</div>
+
+			<form id="tourForm" method="post" th:action="@{/admin/tours/save}"
+				th:object="${tourRequestDTO}" enctype="multipart/form-data"
+				class="p-6 grid grid-cols-1 md:grid-cols-2 gap-5">
+
+				<input type="hidden" th:field="*{id}" id="tourId"> <input
+					type="hidden" th:field="*{existingImageUrl}" id="existingImageUrl">
+
+				<div>
+					<label for="name" class="block text-sm font-semibold mb-1">Tên
+						tour <span class="text-red-500">*</span>
+					</label> <input type="text" th:field="*{name}" id="name"
+						class="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500"
+						th:classappend="${#fields.hasErrors('name')} ? 'border-red-500' : 'border-gray-300'">
+					<p th:if="${#fields.hasErrors('name')}" th:errors="*{name}"
+						class="text-red-500 text-xs mt-1"></p>
+				</div>
+
+				<div>
+					<label for="location" class="block text-sm font-semibold mb-1">Địa
+						điểm <span class="text-red-500">*</span>
+					</label> <input type="text" th:field="*{location}" id="location"
+						class="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500"
+						th:classappend="${#fields.hasErrors('location')} ? 'border-red-500' : 'border-gray-300'">
+					<p th:if="${#fields.hasErrors('location')}" th:errors="*{location}"
+						class="text-red-500 text-xs mt-1"></p>
+				</div>
+
+				<div>
+					<label for="categoryId" class="block text-sm font-semibold mb-1">Danh
+						mục <span class="text-red-500">*</span>
+					</label> <select th:field="*{categoryId}" id="categoryId"
+						class="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500"
+						th:classappend="${#fields.hasErrors('categoryId')} ? 'border-red-500' : 'border-gray-300'">
+						<option value="">-- Chọn danh mục --</option>
+						<option th:each="cat : ${categories}" th:value="${cat.id}"
+							th:text="${cat.name}"></option>
+					</select>
+					<p th:if="${#fields.hasErrors('categoryId')}"
+						th:errors="*{categoryId}" class="text-red-500 text-xs mt-1"></p>
+				</div>
+
+				<div>
+					<label for="status" class="block text-sm font-semibold mb-1">Trạng
+						thái <span class="text-red-500">*</span>
+					</label> <select th:field="*{status}" id="status"
+						class="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500"
+						th:classappend="${#fields.hasErrors('status')} ? 'border-red-500' : 'border-gray-300'">
+						<option th:each="s : ${tourStatuses}" th:value="${s.name()}"
+							th:text="${s.name()}"></option>
+					</select>
+					<p th:if="${#fields.hasErrors('status')}" th:errors="*{status}"
+						class="text-red-500 text-xs mt-1"></p>
+				</div>
+
+				<div>
+					<label for="durationDays" class="block text-sm font-semibold mb-1">Thời
+						gian (ngày) <span class="text-red-500">*</span>
+					</label> <input type="number" th:field="*{durationDays}" id="durationDays"
+						min="1"
+						class="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500"
+						th:classappend="${#fields.hasErrors('durationDays')} ? 'border-red-500' : 'border-gray-300'">
+					<p th:if="${#fields.hasErrors('durationDays')}"
+						th:errors="*{durationDays}" class="text-red-500 text-xs mt-1"></p>
+				</div>
+
+				<div>
+					<label for="availableSlots"
+						class="block text-sm font-semibold mb-1">Số chỗ <span
+						class="text-red-500">*</span></label> <input type="number"
+						th:field="*{availableSlots}" id="availableSlots" min="0"
+						class="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500"
+						th:classappend="${#fields.hasErrors('availableSlots')} ? 'border-red-500' : 'border-gray-300'">
+					<p th:if="${#fields.hasErrors('availableSlots')}"
+						th:errors="*{availableSlots}" class="text-red-500 text-xs mt-1"></p>
+				</div>
+
+				<div>
+					<label for="price" class="block text-sm font-semibold mb-1">Giá
+						(VNĐ) <span class="text-red-500">*</span>
+					</label> <input type="number" th:field="*{price}" id="price" step="100000"
+						class="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500"
+						th:classappend="${#fields.hasErrors('price')} ? 'border-red-500' : 'border-gray-300'">
+					<p th:if="${#fields.hasErrors('price')}" th:errors="*{price}"
+						class="text-red-500 text-xs mt-1"></p>
+				</div>
+
+				<div>
+					<label for="imageFile" class="block text-sm font-semibold mb-1">Upload
+						Ảnh Mới</label> <input type="file" th:field="*{imageFile}" id="imageFile"
+						accept="image/*"
+						class="w-full border rounded-lg px-4 py-2 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+					<div id="imagePreviewContainer" class="mt-2"
+						th:if="*{id != null and existingImageUrl != null}">
+						<label class="block text-xs font-medium text-gray-500">Ảnh
+							hiện tại:</label> <img id="imagePreview" th:src="*{existingImageUrl}"
+							alt="Current Image"
+							class="w-24 h-24 object-cover rounded-md mt-1 border border-gray-200">
+					</div>
+					<p th:if="${#fields.hasErrors('imageFile')}"
+						th:errors="*{imageFile}" class="text-red-500 text-xs mt-1"></p>
+				</div>
+
+				<div class="md:col-span-2">
+					<label for="description" class="block text-sm font-semibold mb-1">Mô
+						tả</label>
+					<textarea rows="3" th:field="*{description}" id="description"
+						class="w-full border border-gray-300 rounded-lg px-4 py-2"></textarea>
+				</div>
+
+				<div th:if="${errorMessage}"
+					class="md:col-span-2 text-red-600 font-medium bg-red-50 p-3 rounded-lg border border-red-200">
+					[[${errorMessage}]]</div>
+
+				<div class="md:col-span-2 flex justify-end space-x-3 pt-3 border-t">
+					<button type="button" onclick="closeModal()"
+						class="px-6 py-2 bg-gray-400 text-white rounded-lg">Hủy</button>
+
+					<button type="submit"
+						class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+						Lưu</button>
+				</div>
+			</form>
+		</div>
+	</div>
+	<!-- ================= END MODAL ================= -->
+
+	<script th:src="@{/js/dashboard.js}"></script>
+
+	<script th:inline="javascript">
+    function showAddModal() {
+        document.getElementById('tourForm').reset();
+        document.getElementById('modalTitle').innerText = "Thêm tour mới";
+        document.getElementById('tourId').value = "";
+        document.getElementById('existingImageUrl').value = "";
+        const previewContainer = document.getElementById('imagePreviewContainer');
+        if (previewContainer) previewContainer.style.display = 'none';
+        document.getElementById('tourModal').classList.add('show');
+    }
+
+    function closeModal() {
+        document.getElementById('tourModal').classList.remove('show');
+    }
+
+    // Hàm chuyển hướng để lấy dữ liệu EDIT từ Controller
+    function redirectForEdit(btn) {
+        const tourId = btn.getAttribute('data-tour-id');
+        // Controller sẽ nhận GET này, xử lý và redirect kèm FlashAttribute
+        window.location.href = '/admin/tours/edit/' + tourId;
+    }
+    const isModalError = /*[[${modalError}]]*/ false; 
+    const openEditModalId = /*[[${openEditModal}]]*/ null;
+    // Hàm xử lý khi trang tải lại, kiểm tra lỗi/dữ liệu edit từ Controller
+    document.addEventListener('DOMContentLoaded', () => {
+        const modal = document.getElementById('tourModal');
+        // 1. Logic tự động mở modal khi có lỗi Validation/Lỗi chung (POST /save)
+        if (isModalError) {
+            // Dữ liệu form đã được Thymeleaf bind lại từ FlashAttribute, chỉ cần mở modal
+            modal.classList.add('show');
+            
+            // Cập nhật tiêu đề nếu đang ở chế độ sửa (ID có giá trị)
+            if (document.getElementById('tourId').value) {
+                document.getElementById('modalTitle').innerText = "Chỉnh sửa tour";
+                const existingUrl = document.getElementById('existingImageUrl').value;
+                const previewContainer = document.getElementById('imagePreviewContainer');
+                const imagePreview = document.getElementById('imagePreview');
+
+                if (existingUrl) {
+                    imagePreview.src = existingUrl;
+                    previewContainer.style.display = 'block';
+                }
+            } else {
+                document.getElementById('modalTitle').innerText = "Thêm tour mới";
+            }
+        }
+        
+        // 2. Logic tự động mở modal khi chuyển hướng từ GET /edit/{id}
+        else if (openEditModalId !== null) {
+            // Dữ liệu đã được Controller map và flash dưới dạng tourRequestDTO. 
+            // Thymeleaf đã bind tourRequestDTO này vào form khi trang load.
+
+            document.getElementById('modalTitle').innerText = "Chỉnh sửa tour";
+            
+            const existingUrl = document.getElementById('existingImageUrl').value;
+            const previewContainer = document.getElementById('imagePreviewContainer');
+            const imagePreview = document.getElementById('imagePreview');
+
+            if (existingUrl) {
+                imagePreview.src = existingUrl;
+                previewContainer.style.display = 'block';
+            } else if (previewContainer) {
+                 previewContainer.style.display = 'none';
+            }
+            
+            modal.classList.add('show');
+        }
+    });
+
+    
+    function deleteTour(tourId) {
+        if (confirm('Bạn có chắc chắn muốn xóa tour ID ' + tourId + '?')) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/admin/tours/delete/' + tourId; 
+            
+            document.body.appendChild(form);
+            form.submit();
+        }
+    }
+
+    function toggleStatus(tourId) {
+        if (confirm('Bạn có muốn chuyển đổi trạng thái của Tour ID ' + tourId + ' không?')) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/admin/tours/toggle-status/' + tourId; 
+            
+            document.body.appendChild(form);
+            form.submit();
+        }
+    }
+</script>
+</body>
+</html>
