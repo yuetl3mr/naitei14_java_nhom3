@@ -1,5 +1,7 @@
 package org.example.framgiabookingtours.repository;
 
+import org.example.framgiabookingtours.dto.response.BookingStatusDTO;
+import org.example.framgiabookingtours.dto.response.MonthlyRevenueDTO;
 import org.example.framgiabookingtours.entity.Booking;
 import org.example.framgiabookingtours.enums.BookingStatus;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -25,15 +27,27 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 	long countByStatus(BookingStatus status);
 
 	// Tính tổng doanh thu của các booking đã thanh toán (PAID)
-  @Query("SELECT COALESCE(SUM(b.totalPrice), 0) FROM Booking b WHERE b.status = 'PAID'")
-  BigDecimal sumTotalRevenue();
+	@Query("SELECT COALESCE(SUM(b.totalPrice), 0) FROM Booking b WHERE b.status = 'PAID'")
+	BigDecimal sumTotalRevenue();
 
-  // Đếm số booking trong khoảng thời gian (Dùng cho Booking hôm nay)
-  long countByBookingDateBetween(LocalDateTime start, LocalDateTime end);
-    
-  // (Nâng cao) Tính doanh thu theo tháng cụ thể để tính tăng trưởng
-  @Query("SELECT COALESCE(SUM(b.totalPrice), 0) FROM Booking b WHERE b.status = 'PAID' AND MONTH(b.bookingDate) = :month AND YEAR(b.bookingDate) = :year")
-  BigDecimal sumRevenueByMonth(@Param("month") int month, @Param("year") int year);
+	// Đếm số booking trong khoảng thời gian (Dùng cho Booking hôm nay)
+	long countByBookingDateBetween(LocalDateTime start, LocalDateTime end);
 
-  List<Booking> findByUserIdOrderByBookingDateDesc(Long userId);
+	// Tính doanh thu theo tháng cụ thể để tính tăng trưởng
+	@Query("SELECT COALESCE(SUM(b.totalPrice), 0) FROM Booking b WHERE b.status = 'PAID' AND MONTH(b.bookingDate) = :month AND YEAR(b.bookingDate) = :year")
+	BigDecimal sumRevenueByMonth(@Param("month") int month, @Param("year") int year);
+
+	List<Booking> findByUserIdOrderByBookingDateDesc(Long userId);
+
+	// Thống kê Doanh thu theo tháng trong một năm cụ thể
+	// Chỉ tính các booking đã PAID
+	@Query("SELECT new org.example.framgiabookingtours.dto.response.MonthlyRevenueDTO(MONTH(b.bookingDate), SUM(b.totalPrice)) "
+			+ "FROM Booking b " + "WHERE b.status = 'PAID' AND YEAR(b.bookingDate) = :year "
+			+ "GROUP BY MONTH(b.bookingDate) " + "ORDER BY MONTH(b.bookingDate)")
+	List<MonthlyRevenueDTO> getMonthlyRevenue(@Param("year") int year);
+
+	// 2. Thống kê số lượng theo Trạng thái
+	@Query("SELECT new org.example.framgiabookingtours.dto.response.BookingStatusDTO(b.status, COUNT(b)) "
+			+ "FROM Booking b " + "GROUP BY b.status")
+	List<BookingStatusDTO> getBookingStatusStats();
 }
