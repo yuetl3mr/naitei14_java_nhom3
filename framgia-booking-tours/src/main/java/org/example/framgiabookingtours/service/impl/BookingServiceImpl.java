@@ -20,7 +20,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -207,6 +209,14 @@ public class BookingServiceImpl implements BookingService {
         log.info("Admin đã chuyển trạng thái Booking ID: {} từ {} sang CANCELLED", bookingId, oldStatus);
 
         return bookingRepository.save(booking);
+    }
+
+    @Override
+    public List<Booking> searchBookings(String keyword, BookingStatus status, LocalDate fromDate, LocalDate toDate) {
+        LocalDateTime startDateTime = (fromDate != null) ? fromDate.atStartOfDay() : null; // 00:00:00
+        LocalDateTime endDateTime = (toDate != null) ? toDate.atTime(LocalTime.MAX) : null; // 23:59:59
+
+        return bookingRepository.searchBookings(keyword, status, startDateTime, endDateTime);
     }
 }
 

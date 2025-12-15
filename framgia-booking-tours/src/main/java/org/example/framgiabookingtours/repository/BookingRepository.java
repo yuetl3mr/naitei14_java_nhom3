@@ -33,6 +33,22 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 	// Đếm số booking trong khoảng thời gian (Dùng cho Booking hôm nay)
 	long countByBookingDateBetween(LocalDateTime start, LocalDateTime end);
 
+  List<Booking> findByUserIdOrderByBookingDateDesc(Long userId);
+
+    @EntityGraph(attributePaths = {"user", "user.profile", "tour"})
+    @Query("SELECT b FROM Booking b WHERE " +
+            "(:keyword IS NULL OR :keyword = '' OR " +
+            "   LOWER(b.user.email) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+            "   LOWER(b.user.profile.fullName) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
+            "AND (:status IS NULL OR b.status = :status) " +
+            "AND (:fromDate IS NULL OR b.bookingDate >= :fromDate) " +
+            "AND (:toDate IS NULL OR b.bookingDate <= :toDate) " +
+            "ORDER BY b.bookingDate DESC")
+    List<Booking> searchBookings(@Param("keyword") String keyword,
+                                 @Param("status") BookingStatus status,
+                                 @Param("fromDate") LocalDateTime fromDate,
+                                 @Param("toDate") LocalDateTime toDate);
+  
 	// Tính doanh thu theo tháng cụ thể để tính tăng trưởng
 	@Query("SELECT COALESCE(SUM(b.totalPrice), 0) FROM Booking b WHERE b.status = 'PAID' AND MONTH(b.bookingDate) = :month AND YEAR(b.bookingDate) = :year")
 	BigDecimal sumRevenueByMonth(@Param("month") int month, @Param("year") int year);
